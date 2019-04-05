@@ -6,6 +6,7 @@ module Main where
 import System.Console.CmdArgs
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
+import Biobase.HTS.Library
 
 options :: Options
 data Options = Options
