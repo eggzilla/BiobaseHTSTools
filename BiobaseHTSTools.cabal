@@ -1,0 +1,38 @@
+name:                BiobaseHTSTools
+version:             1.0.0
+synopsis:            Tools for processing High Throughput Sequencing data
+description:         Tools for processing High Throughput Sequencing data
+license:             GPL-3
+license-file:        LICENSE
+author:              Florian Eggenhofer
+maintainer:          egg@informatik.uni-freiburg.de
+copyright:           Florian Eggenhofer
+homepage:	     https://github.com/eggzilla/BiobaseHTSTools
+category:            Bioinformatics
+build-type:          Simple
+cabal-version:       >=1.8
+Tested-With: GHC == 8.4.3
+
+Extra-Source-Files:
+        README.md changelog
+
+source-repository head
+  type:     git
+  location: https://github.com/eggzilla/BiobaseHTSTools
+
+source-repository this
+  type:     darcs
+  location: https://github.com/eggzilla/BiobaseHTSTools/tree/1.1.0
+  tag:      1.1.0
+
+library
+  exposed-modules:     Biobase.HTS.Library
+  ghc-options:         -Wall
+  build-depends:       base >=4.5 && <5, transformers, bytestring, text, aeson, either-unwrap
+  hs-source-dirs:      .
+
+executable HTSCoverage
+  Hs-Source-Dirs:      ./Biobase/
+  main-is:	       Coverage.hs
+  ghc-options:         -Wall -O2
+  build-depends:       base >=4.5 && <5, cmdargs, either-unwrap, bytestring, text, containers
