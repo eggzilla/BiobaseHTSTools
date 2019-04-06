@@ -15,18 +15,6 @@ import qualified Data.ByteString.Char8 as B
 data SAM = SAM
   { samHeader :: SAMHeader,
     samEntries :: [SAMEntry],
-    nSCICutoff :: Double,
-    userTaxId :: Maybe Int,
-    singleHitperTaxToggle :: Bool,
-    querySelectionMethod :: String,
-    queryNumber :: Int,
-    lengthFilterToggle :: Bool,
-    coverageFilterToggle :: Bool,
-    blastSoftmaskingToggle :: Bool,
-    cpuThreads :: Int,
-    blastDatabase :: Maybe String,
-    taxRestriction :: Maybe String,
-    verbositySwitch :: Bool
   } deriving (Show)
 
 data SAMHeader = SAMHeader
