@@ -26,9 +26,9 @@ source-repository this
   tag:      1.1.0
 
 library
-  exposed-modules:     Biobase.HTS.Library
+  exposed-modules:     Biobase.HTS.Library, Biobase.HTS.SAMParser
   ghc-options:         -Wall
-  build-depends:       base >=4.5 && <5, transformers, bytestring, text, aeson, either-unwrap
+  build-depends:       base >=4.5 && <5, transformers, bytestring, text, aeson, either-unwrap, attoparsec, vector, directory
   hs-source-dirs:      .
 
 executable HTSCoverage
