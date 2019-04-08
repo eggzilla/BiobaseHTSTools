@@ -6,24 +6,26 @@ module Biobase.HTS.SAMParser where
 
 import Prelude hiding (takeWhile, take)
 import Data.Attoparsec.ByteString.Char8 hiding (isSpace)
+import Data.Attoparsec.Combinator
 import qualified Data.Attoparsec.ByteString.Lazy as L
 import qualified Data.ByteString.Char8 as B
 import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Lazy.Char8 as C
 import System.Directory
 import Data.Char
+import qualified Data.Vector as V
 
 -- | SAM
 -- For specification see https://samtools.github.io/hts-specs/SAMv1.pdf
 data SAM = SAM
-  { samHeader :: [SAMHeaderEntry],
-    samEntries :: [SAMEntry]
-  } deriving (Show)
+  { samHeader :: V.Vector SAMHeaderEntry,
+    samEntries :: V.Vector SAMEntry
+  } deriving (Eq)
 
 data SAMHeaderEntry = SAMHeaderEntry
   { headerid :: B.ByteString,
     headervalue :: B.ByteString
-  } deriving (Show)
+  } deriving (Eq)
          
 data SAMEntry = SAMEntry
   { qname :: B.ByteString,
@@ -38,7 +40,19 @@ data SAMEntry = SAMEntry
     seq :: B.ByteString,
     qual :: B.ByteString,
     rest :: B.ByteString
-  } deriving (Show)
+  } deriving (Eq)
+
+instance Show SAM where
+  show (SAM _samHeader _samEntries) = concatMap show (V.toList _samHeader) ++ concatMap show (V.toList _samEntries)
+
+instance Show SAMHeaderEntry where
+  show (SAMHeaderEntry _headerid _headervalue) =
+    (B.unpack _headerid) ++ "\t" ++ (B.unpack _headervalue) ++ "\n"
+
+instance Show SAMEntry where
+  show (SAMEntry  _qname _flag _rname _pos _mapq _cigar _rnext _pnext _tlen _seq _qual _rest) =
+    (B.unpack _qname) ++ "\t" ++ (show _flag) ++ "\t" ++ (show _pos) ++ "\t" ++ show _mapq ++ "\t" ++ B.unpack _cigar ++ "\t" ++ (B.unpack _rnext) ++ "\t" ++ show _pnext ++  "\t" ++ show _tlen ++ "\t" ++ B.unpack _seq ++ "\t" ++ B.unpack _qual  ++ B.unpack _rest ++ "\n"
+
 
 
 -- | reads and parses SAMs from provided filePath
@@ -63,7 +77,7 @@ genParseSAM = do
   _ <- many1 (notChar '\n')
   _ <- endOfLine
   _samEntries <- many' (try genParseSAMEntry)  <?> "SAM entry"
-  return $ SAM _samHeader _samEntries
+  return $ SAM (V.fromList _samHeader) (V.fromList _samEntries)
 
 genParseSAMHeaderEntry :: Parser SAMHeaderEntry
 genParseSAMHeaderEntry = do
@@ -76,6 +90,7 @@ genParseSAMHeaderEntry = do
 
 genParseSAMEntry :: Parser SAMEntry
 genParseSAMEntry = do
+  _ <- lookAhead (notChar '@')
   _qname <- takeWhile1 ((/=9) . ord) <?> "qname"
   _ <- char '\t'
   _flag <- decimal <?> "flag"

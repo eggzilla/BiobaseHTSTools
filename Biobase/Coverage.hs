@@ -7,26 +7,26 @@ import System.Console.CmdArgs
 import qualified Data.Text as T
 import qualified Data.Text.IO as TIO
 import Biobase.HTS.Library
+import qualified Data.ByteString.Char8 as B
+import qualified Data.Vector as V
 
 options :: Options
 data Options = Options
-  { geneIds :: String,
-    geneIdFilePath :: String
+  { samFilePath :: String
   } deriving (Show,Data,Typeable)
 
 options = Options
-  { geneIds = def &= name "g" &= help "Ensembl gene ids (or NCBI locus tags) comma separated, e.g b0001,b0825",
-    geneIdFilePath = def &= name "f" &= help "Path to file containing one Ensembl gene ids (or NCBI locus tags) per line, e.g b0001\nb0825\n"
-  } &= summary ("GeneIdToGOTerms") &= help "Florian Eggenhofer - 2018" &= verbosity
+  { samFilePath = def &= name "f" &= help "Path to SAM format file"
+  } &= summary ("Coverage") &= help "Florian Eggenhofer - 2019" &= verbosity
 
 main :: IO ()
 main = do
   Options{..} <- cmdArgs options
-  let geneIdsText = T.pack geneIds
-  let geneIdList = T.splitOn "," geneIdsText
-  if null geneIdFilePath
-    then print("No input")
+  if null samFilePath
+    then print("No input" :: String)
     else do
-      geneIdFile <- TIO.readFile geneIdFilePath
-      let fileGeneIds = T.lines geneIdFile
-      print(head(fileGeneIds))
+      sams <- readSAMSs samFilePath 
+      let sam = head sams
+      let mapped_sam = V.filter (\entry -> (4 :: Int) /= mapq entry) (samEntries sam)
+      mapM_ (putStr . show) mapped_sam
+      --print (B.unpack fqname)
