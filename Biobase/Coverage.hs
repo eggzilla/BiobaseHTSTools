@@ -9,6 +9,8 @@ import qualified Data.Text.IO as TIO
 import Biobase.HTS.Library
 import qualified Data.ByteString.Char8 as B
 import qualified Data.Vector as V
+import Data.Bits
+import Data.Maybe
 
 options :: Options
 data Options = Options
@@ -25,8 +27,14 @@ main = do
   if null samFilePath
     then print("No input" :: String)
     else do
-      sams <- readSAMSs samFilePath 
-      let sam = head sams
-      let mapped_sam = V.filter (\entry -> (4 :: Int) /= mapq entry) (samEntries sam)
-      mapM_ (putStr . show) mapped_sam
-      --print (B.unpack fqname)
+      --sams <- readSAMSs samFilePath 
+      --let sam = head sams
+      --let mapped_sam = V.filter (\entry -> (4 :: Int) /= mapq entry) (samEntries sam)
+      --mapM_ (putStr . show) mapped_sam
+      let bitflag = (bit (4 :: Int)) :: Bits Int
+      let justBitSize = bitSizeMaybe bitflag
+      print justBitSize 
+      let ltestBit = testBit bitflag 4
+      print ltestBit
+
+--bitCheck :: Bit Int -> Bool
