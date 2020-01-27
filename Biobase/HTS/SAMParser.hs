@@ -14,6 +14,7 @@ import qualified Data.ByteString.Lazy.Char8 as C
 import System.Directory
 import Data.Char
 import qualified Data.Vector as V
+import Data.Bits.Bitwise
 
 -- | SAM
 -- For specification see https://samtools.github.io/hts-specs/SAMv1.pdf
@@ -29,7 +30,7 @@ data SAMHeaderEntry = SAMHeaderEntry
          
 data SAMEntry = SAMEntry
   { qname :: B.ByteString,
-    flag :: Int,
+    flag :: [Bool],
     rname :: B.ByteString,
     pos :: Int,
     mapq :: Int,
@@ -42,6 +43,9 @@ data SAMEntry = SAMEntry
     rest :: B.ByteString
   } deriving (Eq)
 
+data SAMFlag = ReadMapped | ReadMappedInProperPair | ReadUnmapped | ReadReverseStrand | MateReverseStrand | FirstInPair | SecondInPair | NotPrimaryAlignment | ReadFailsQualityCheck | ReadIsDuplicate | SupplementaryAlignment
+     deriving (Eq)
+              
 instance Show SAM where
   show (SAM _samHeader _samEntries) = concatMap show (V.toList _samHeader) ++ concatMap show (V.toList _samEntries)
 
@@ -115,7 +119,7 @@ genParseSAMEntry = do
   _ <- char '\t'
   _rest <- takeWhile1 ((/=10) . ord) <?> "rest" -- 10 == '\n'
   _ <- char '\n'
-  return $ SAMEntry _qname _flag _rname _pos _mapq _cigar _rnext _pnext _tlen _seq _qual _rest
+  return $ SAMEntry _qname (toListLE (toInteger _flag)) _rname _pos _mapq _cigar _rnext _pnext _tlen _seq _qual _rest
 
 toLB :: B.ByteString -> C.ByteString
 toLB = S.toLazyByteString . S.byteString
