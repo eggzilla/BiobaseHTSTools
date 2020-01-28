@@ -26,8 +26,10 @@ main = do
   if null samFilePath
     then print("No input" :: String)
     else do
-      sams <- readSAMSs samFilePath
-      mapM_ outputMappedEntries sams
+      --sams <- readSAMs samFilePath
+      --mapM_ outputMappedEntries sams
+      mapped_sam <- readSAMEntries samFilePath
+      mapM_ (print . pos) mapped_sam
       --let sam = head sams
       --let mapped_sam = filter (\entry -> (4 :: Int) /= mapq entry) (samEntries sam)
       --mapM_ (putStr . show) mapped_sam
@@ -52,6 +54,7 @@ outputMappedEntries sam = do
   let mapped_sam = samEntries sam
   mapM_ (print . pos) mapped_sam
 
+        
 --bitCheck :: Bit Int -> Bool
 myBit :: Int
 myBit = bit 1

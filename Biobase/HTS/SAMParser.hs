@@ -61,8 +61,8 @@ instance Show SAMEntry where
 
 
 -- | reads and parses SAMs from provided filePath
-readSAMSs :: String -> IO [SAM]
-readSAMSs filePath = do
+readSAMs :: String -> IO [SAM]
+readSAMs filePath = do
   fileExists <- doesFileExist filePath
   if fileExists
      then parseSAMs <$> C.readFile filePath
@@ -75,6 +75,22 @@ parseSAMs = go
           L.Done remainingInput btr
             | C.null remainingInput  -> [btr]
             | otherwise              -> btr : go remainingInput
+                                        
+readSAMEntries :: String -> IO [SAMEntry]
+readSAMEntries filePath = do
+  fileExists <- doesFileExist filePath
+  if fileExists
+     then parseSAMEntries <$> C.readFile filePath
+     else fail "# SAM file \"%s\" does not exist\n" filePath
+
+                                        
+parseSAMEntries :: C.ByteString -> [SAMEntry]
+parseSAMEntries = go
+  where go xs = case L.parse genParseSAMEntries xs of
+          L.Fail remainingInput ctxts err  -> error $ "parseSAM failed! " ++ err ++ " ctxt: " ++ show ctxts ++ " head of remaining input: " ++ (C.unpack $ C.take 1000 remainingInput)
+          L.Done remainingInput btr
+            | C.null remainingInput  -> btr
+            | otherwise              -> btr ++ go remainingInput
 
 -- | reads and parses SAM from provided filePath
 --readSAM :: String -> IO SAM
@@ -92,6 +108,15 @@ parseSAMs = go
 --            | C.null remainingInput  -> btr
 --            | otherwise              -> btr : go remainingInput
 
+genParseSAMEntries :: Parser [SAMEntry]
+genParseSAMEntries = do
+  _ <- many' (try genParseSAMHeaderEntry) <?> "SAM header entry"
+  _ <- many1 (notChar '\n')
+  _ <- endOfLine
+  _samEntries <- many' (try genParseSAMEntry)  <?> "SAM entry"
+  return $ _samEntries
+
+
 genParseSAM :: Parser SAM
 genParseSAM = do
   _samHeader <- many' (try genParseSAMHeaderEntry) <?> "SAM header entry"
@@ -99,6 +124,7 @@ genParseSAM = do
   _ <- endOfLine
   _samEntries <- many' (try genParseSAMEntry)  <?> "SAM entry"
   return $ SAM _samHeader _samEntries
+
 
 genParseSAMHeaderEntry :: Parser SAMHeaderEntry
 genParseSAMHeaderEntry = do
