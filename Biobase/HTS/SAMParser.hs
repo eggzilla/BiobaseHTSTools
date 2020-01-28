@@ -13,14 +13,15 @@ import qualified Data.ByteString.Builder as S
 import qualified Data.ByteString.Lazy.Char8 as C
 import System.Directory
 import Data.Char
-import qualified Data.Vector as V
+--import qualified Data.Vector as V
 import Data.Bits.Bitwise
+import qualified Data.Either.Unwrap as E
 
 -- | SAM
 -- For specification see https://samtools.github.io/hts-specs/SAMv1.pdf
 data SAM = SAM
-  { samHeader :: V.Vector SAMHeaderEntry,
-    samEntries :: V.Vector SAMEntry
+  { samHeader :: [SAMHeaderEntry],
+    samEntries :: [SAMEntry]
   } deriving (Eq)
 
 data SAMHeaderEntry = SAMHeaderEntry
@@ -47,7 +48,7 @@ data SAMFlag = ReadMapped | ReadMappedInProperPair | ReadUnmapped | ReadReverseS
      deriving (Eq)
               
 instance Show SAM where
-  show (SAM _samHeader _samEntries) = concatMap show (V.toList _samHeader) ++ concatMap show (V.toList _samEntries)
+  show (SAM _samHeader _samEntries) = concatMap show _samHeader ++ concatMap show  _samEntries
 
 instance Show SAMHeaderEntry where
   show (SAMHeaderEntry _headerid _headervalue) =
@@ -75,13 +76,29 @@ parseSAMs = go
             | C.null remainingInput  -> [btr]
             | otherwise              -> btr : go remainingInput
 
+-- | reads and parses SAM from provided filePath
+--readSAM :: String -> IO SAM
+--readSAM filePath = do
+--  fileExists <- doesFileExist filePath
+--  if fileExists
+--     then parseSAM <$> C.readFile filePath
+--     else fail "# SAM file \"%s\" does not exist\n" filePath
+
+--parseSAM :: C.ByteString -> SAM
+--parseSAM inputBS = E.fromRight (L.parseOnly genParseSAM inputBS)
+--  where go xs = case L.parse genParseSAM xs of
+--          L.Fail remainingInput ctxts err  -> error $ "parseSAM failed! " ++ err ++ " ctxt: " ++ show ctxts ++ " head of remaining input: " ++ (C.unpack $ C.take 1000 remainingInput)
+--          L.Done remainingInput btr
+--            | C.null remainingInput  -> btr
+--            | otherwise              -> btr : go remainingInput
+
 genParseSAM :: Parser SAM
 genParseSAM = do
   _samHeader <- many' (try genParseSAMHeaderEntry) <?> "SAM header entry"
   _ <- many1 (notChar '\n')
   _ <- endOfLine
   _samEntries <- many' (try genParseSAMEntry)  <?> "SAM entry"
-  return $ SAM (V.fromList _samHeader) (V.fromList _samEntries)
+  return $ SAM _samHeader _samEntries
 
 genParseSAMHeaderEntry :: Parser SAMHeaderEntry
 genParseSAMHeaderEntry = do
